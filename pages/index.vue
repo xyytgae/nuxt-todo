@@ -8,12 +8,13 @@
     <!-- 入力フォーム -->
     <v-col cols="12" class="px-0 mb-6">
       <v-text-field
-        class=""
         placeholder="TODOを入力しよう！"
         color="#00BCD4"
         hide-details
         solo
         clearable
+        v-model="input.todo.body"
+        @keyup.enter="addTodo()"
       >
       </v-text-field>
     </v-col>
@@ -26,44 +27,67 @@
           color="cyan"
           height="10"
         ></v-progress-linear>
+
+        <!-- 締切日で並び替え -->
+        <v-card-text class="pb-0">
+          締切日
+          <v-btn icon @click="sort.desc = !sort.desc">
+            <v-icon>{{
+              sort.desc ? 'mdi-chevron-up' : 'mdi-chevron-down'
+            }}</v-icon>
+          </v-btn>
+        </v-card-text>
+
         <v-list flat>
-          <v-list-item-group v-for="(todo, index) in todos" :key="todo.id">
-            <v-list-item>
-              <v-list-item-action>
-                <v-checkbox color="cyan" v-model="todo.status"></v-checkbox>
-              </v-list-item-action>
-              <v-list-item-content>
-                <span :class="{ 'text--cyan': todo.status }">
-                  {{ todo.body }};{{ todo.id }}</span
-                >
-              </v-list-item-content>
-              <v-list-item-action>
-                <v-btn icon>
-                  <v-icon color="cyan">mdi-pencil-outline</v-icon>
-                </v-btn>
-              </v-list-item-action>
-            </v-list-item>
-            <v-divider v-if="index !== todos.length - 1"></v-divider>
+          <v-divider></v-divider>
+          <v-list-item-group
+            v-for="(todo, index) in sortedTodos"
+            :key="todo.id"
+          >
+            <OutputTodo :todo="todo" />
+
+            <v-divider v-if="index !== sortedTodos.length - 1"></v-divider>
           </v-list-item-group>
         </v-list>
       </v-card>
     </v-col>
+
+    <CalendarDialog />
+
+    <CheckDeleteDialog />
   </v-row>
 </template>
 
-<script>
-export default {
-  data() {
+<script lang="ts">
+import { defineComponent, inject, provide } from '@nuxtjs/composition-api'
+import useTodo, { TodoStore } from '@/compositions/useTodo'
+import TodoKey from '@/compositions/useTodoKey'
+
+import OutputTodo from '@/components/OutputTodo.vue'
+import CalendarDialog from '@/components/CalendarDialog.vue'
+import CheckDeleteDialog from '@/components/CheckDeleteDialog.vue'
+
+export default defineComponent({
+  components: {
+    OutputTodo,
+    CalendarDialog,
+    CheckDeleteDialog,
+  },
+  setup() {
+    provide(TodoKey, useTodo())
+    const { sort, sortedTodos, input, progress, addTodo, onMounted } = inject(
+      TodoKey
+    ) as TodoStore
     return {
-      todos: [
-        { body: '新しいTodo', id: 1, status: false },
-        { body: '新しいTodo', id: 2, status: false },
-        { body: '新しいTodo', id: 3, status: false },
-      ],
-      progress: 30,
+      sort,
+      sortedTodos,
+      input,
+      progress,
+      addTodo,
+      onMounted,
     }
   },
-}
+})
 </script>
 
 <style lang="scss" scoped>
@@ -71,6 +95,5 @@ export default {
 
 .text--cyan {
   color: $cyan;
-  // color: #00bcd4;
 }
 </style>
