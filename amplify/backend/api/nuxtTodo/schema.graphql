@@ -1,0 +1,6 @@
+type Todo @model {
+  id: ID!
+  body: String!
+  status: Boolean
+  deadline: String!
+}

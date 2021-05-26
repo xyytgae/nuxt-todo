@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-nuxttodo-dev-185326-authRole",
+      "UnauthRoleArn": "arn:aws:iam::132554411665:role/amplify-nuxttodo-dev-185326-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::132554411665:role/amplify-nuxttodo-dev-185326-authRole",
+      "Region": "ap-northeast-1",
+      "DeploymentBucketName": "amplify-nuxttodo-dev-185326-deployment",
+      "UnauthRoleName": "amplify-nuxttodo-dev-185326-unauthRole",
+      "StackName": "amplify-nuxttodo-dev-185326",
+      "StackId": "arn:aws:cloudformation:ap-northeast-1:132554411665:stack/amplify-nuxttodo-dev-185326/0fecf970-bd3f-11eb-8ff0-0ed087824a95",
+      "AmplifyAppId": "d3qxth0ee09yi1"
+    }
+  }
+}
