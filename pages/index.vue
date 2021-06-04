@@ -13,7 +13,7 @@
         hide-details
         solo
         clearable
-        v-model="input.todo.body"
+        v-model="inputTodo.body"
         @keyup.enter="addTodo()"
       >
       </v-text-field>
@@ -31,9 +31,9 @@
         <!-- 締切日で並び替え -->
         <v-card-text class="pb-0">
           締切日
-          <v-btn icon @click="sort.desc = !sort.desc">
+          <v-btn icon @click="descending = !descending">
             <v-icon>{{
-              sort.desc ? 'mdi-chevron-up' : 'mdi-chevron-down'
+              descending ? 'mdi-chevron-up' : 'mdi-chevron-down'
             }}</v-icon>
           </v-btn>
         </v-card-text>
@@ -53,8 +53,6 @@
     </v-col>
 
     <CalendarDialog />
-
-    <CheckDeleteDialog />
   </v-row>
 </template>
 
@@ -65,23 +63,20 @@ import TodoKey from '@/compositions/useTodoKey'
 
 import OutputTodo from '@/components/OutputTodo.vue'
 import CalendarDialog from '@/components/CalendarDialog.vue'
-import CheckDeleteDialog from '@/components/CheckDeleteDialog.vue'
 
 export default defineComponent({
   components: {
     OutputTodo,
     CalendarDialog,
-    CheckDeleteDialog,
   },
   setup() {
     provide(TodoKey, useTodo())
-    const { sort, sortedTodos, input, progress, addTodo, onMounted } = inject(
-      TodoKey
-    ) as TodoStore
+    const { descending, sortedTodos, inputTodo, progress, addTodo, onMounted } =
+      inject(TodoKey) as TodoStore
     return {
-      sort,
+      descending,
       sortedTodos,
-      input,
+      inputTodo,
       progress,
       addTodo,
       onMounted,

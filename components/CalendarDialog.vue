@@ -1,9 +1,9 @@
 <template>
-  <v-dialog max-width="350px" v-model="calendarDialog.show">
+  <v-dialog max-width="350px" v-model="calendarDialog">
     <v-date-picker
-      v-model="dialog.todo.deadline"
-      @change="update(dialog.todo)"
-      @input="calendarDialog.show = false"
+      v-model="dialogTodo.deadline"
+      @change="update(dialogTodo)"
+      @input="calendarDialog = false"
       locale="ja"
       no-title
     ></v-date-picker>
@@ -17,11 +17,11 @@ import TodoKey from '@/compositions/useTodoKey'
 
 export default defineComponent({
   setup() {
-    const { update, calendarDialog, dialog } = inject(TodoKey) as TodoStore
+    const { update, calendarDialog, dialogTodo } = inject(TodoKey) as TodoStore
     return {
       update,
       calendarDialog,
-      dialog,
+      dialogTodo,
     }
   },
 })
