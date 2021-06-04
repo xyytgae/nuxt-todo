@@ -51,7 +51,7 @@
     <!-- 編集中に表示 -->
     <template v-else>
       <v-list-item-action>
-        <v-btn icon @mousedown.stop="showCheckDeleteDialog(todo)">
+        <v-btn icon @mousedown.stop="eliminate(todo.id)">
           <v-icon color="red">mdi-delete-outline</v-icon>
         </v-btn>
       </v-list-item-action>
@@ -60,31 +60,29 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject } from '@nuxtjs/composition-api'
+import { defineComponent, inject, ref } from '@nuxtjs/composition-api'
 import { TodoStore } from '@/compositions/useTodo'
 import TodoKey from '@/compositions/useTodoKey'
 
 export default defineComponent({
   setup() {
-    const { update, showCheckDeleteDialog, showCalendarDialog } = inject(
+    const { update, showCalendarDialog, eliminate } = inject(
       TodoKey
     ) as TodoStore
+
+    // 下記の値のみコンポーネント内にて定義
+    const isEdit = ref(false)
     return {
       update,
-      showCheckDeleteDialog,
       showCalendarDialog,
+      eliminate,
+      isEdit,
     }
   },
   props: {
     todo: {
       type: Object,
     },
-  },
-  data() {
-    return {
-      // この値のみcompositionではなく各コンポーネントにて実装
-      isEdit: false,
-    }
   },
 })
 </script>
@@ -93,5 +91,8 @@ export default defineComponent({
 @import '~/assets/styles/colors.scss';
 .text--cyan {
   color: $cyan;
+}
+input {
+  outline: none;
 }
 </style>

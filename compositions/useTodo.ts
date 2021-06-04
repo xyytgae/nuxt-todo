@@ -1,86 +1,61 @@
-import { computed, reactive, onMounted } from '@nuxtjs/composition-api'
+import { computed, reactive, onMounted, ref } from '@nuxtjs/composition-api'
 import { Todo } from './types/todoTypes'
 
 import { API } from 'aws-amplify'
 import { createTodo, deleteTodo, updateTodo } from '~/src/graphql/mutations'
 import { listTodos } from '~/src/graphql/queries'
-import { onCreateTodo, onDeleteTodo } from '~/src/graphql/subscriptions'
+import {
+  onCreateTodo,
+  onUpdateTodo,
+  onDeleteTodo,
+} from '~/src/graphql/subscriptions'
 
 export default function useTodo() {
   /**
    * 出力用のtodos
    */
-  const output = reactive<{
-    todos: Array<Todo>
-  }>({
-    todos: [],
-  })
+  const outputTodos = ref<Todo[]>([])
 
   /**
    * 入力用のtodo
    */
-  const input = reactive<{
-    todo: Todo
-  }>({
-    todo: {
-      body: '',
-      status: false,
-      deadline: new Date().toISOString().substr(0, 10),
-    },
+  const inputTodo = reactive<Todo>({
+    body: '',
+    status: false,
+    deadline: new Date().toISOString().substr(0, 10),
   })
 
   /**
-   * checkDeleteDialog/calendarDialogで扱うtodo
+   * calendarDialogで扱うtodo
    */
-  const dialog = reactive<{
-    todo: Todo
-  }>({
-    todo: {
-      id: '',
-      body: '',
-      status: false,
-      deadline: new Date().toISOString().substr(0, 10),
-    },
+  const dialogTodo = reactive<Todo>({
+    id: '',
+    body: '',
+    status: false,
+    deadline: new Date().toISOString().substr(0, 10),
   })
 
   /**
    * 昇順/降順
    */
-  const sort = reactive<{
-    desc: Boolean
-  }>({
-    desc: true,
-  })
-
-  /**
-   * checkDeleteDialog表示/非表示
-   */
-  const checkDeleteDialog = reactive<{
-    show: Boolean
-  }>({
-    show: false,
-  })
+  const descending = ref(true)
 
   /**
    * calendarDialog表示/非表示
    */
-  const calendarDialog = reactive<{
-    show: Boolean
-  }>({
-    show: false,
-  })
+  const calendarDialog = ref(false)
 
   /**
    * 並び替えたtodos
    * @returns Array<Todo>
    */
   const sortedTodos = computed(() => {
-    if (sort.desc) {
-      return output.todos.sort((a: Todo, b: Todo) => {
+    if (descending.value) {
+      return outputTodos.value.sort((a: Todo, b: Todo) => {
         return Date.parse(a.deadline) - Date.parse(b.deadline)
       })
     } else {
-      return output.todos.sort((a: Todo, b: Todo) => {
+      return outputTodos.value.sort((a: Todo, b: Todo) => {
         return Date.parse(b.deadline) - Date.parse(a.deadline)
       })
     }
@@ -91,8 +66,8 @@ export default function useTodo() {
    * @returns number
    */
   const progress = computed(() => {
-    const doneTodos = output.todos.filter((todo) => todo.status == true)
-    return (doneTodos.length / output.todos.length) * 100
+    const doneTodos = outputTodos.value.filter((todo) => todo.status == true)
+    return (doneTodos.length / outputTodos.value.length) * 100
   })
 
   /**
@@ -101,19 +76,17 @@ export default function useTodo() {
    */
   const addTodo = async () => {
     // 空の場合はreturn
-    if (!input.todo.body) return
+    if (!inputTodo.body) return
 
     await API.graphql({
       query: createTodo,
-      variables: { input: input.todo },
+      variables: { input: inputTodo },
     })
 
     // todoをリセット
-    input.todo = {
-      body: '',
-      status: false,
-      deadline: new Date().toISOString().substr(0, 10),
-    }
+    inputTodo.body = ''
+    inputTodo.status = false
+    inputTodo.deadline = new Date().toISOString().substr(0, 10)
   }
 
   /**
@@ -121,7 +94,7 @@ export default function useTodo() {
    */
   const getTodos = async () => {
     const response = await API.graphql({ query: listTodos })
-    output.todos = response.data.listTodos.items
+    outputTodos.value = response.data.listTodos.items
   }
 
   /**
@@ -129,10 +102,14 @@ export default function useTodo() {
    * @param todoId: string
    */
   const eliminate = async (todoId: string) => {
-    await API.graphql({
-      query: deleteTodo,
-      variables: { input: { id: todoId } },
-    })
+    if (confirm('削除してもいいですか？')) {
+      await API.graphql({
+        query: deleteTodo,
+        variables: { input: { id: todoId } },
+      })
+    } else {
+      alert('キャンセルしました')
+    }
   }
 
   /**
@@ -144,8 +121,23 @@ export default function useTodo() {
     }).subscribe({
       next: (eventData: object) => {
         const todo = eventData.value.data.onCreateTodo
-        if (output.todos.some((item) => item.id == todo.id)) return
-        output.todos = [...output.todos, todo]
+        if (outputTodos.value.some((item) => item.id == todo.id)) return
+        outputTodos.value = [...outputTodos.value, todo]
+      },
+    })
+
+    await API.graphql({
+      query: onUpdateTodo,
+    }).subscribe({
+      next: (eventData: object) => {
+        const todo = eventData.value.data.onUpdateTodo
+
+        outputTodos.value = outputTodos.value.map((item) => {
+          if (item.id == todo.id) {
+            item = todo
+          }
+          return item
+        })
       },
     })
 
@@ -154,7 +146,9 @@ export default function useTodo() {
     }).subscribe({
       next: (eventData: object) => {
         const todo = eventData.value.data.onDeleteTodo
-        output.todos = output.todos.filter((item) => item.id !== todo.id)
+        outputTodos.value = outputTodos.value.filter(
+          (item) => item.id !== todo.id
+        )
       },
     })
   }
@@ -178,21 +172,16 @@ export default function useTodo() {
   }
 
   /**
-   * checkDeleteDialogを表示
-   * @param todo: Todo
-   */
-  const showCheckDeleteDialog = (todo: Todo) => {
-    dialog.todo = todo
-    checkDeleteDialog.show = true
-  }
-
-  /**
    * calendarDialogを表示
    * @param todo: Todo
    */
   const showCalendarDialog = (todo: Todo) => {
-    dialog.todo = todo
-    calendarDialog.show = true
+    dialogTodo.id = todo.id
+    dialogTodo.body = todo.body
+    dialogTodo.status = todo.status
+    dialogTodo.deadline = todo.deadline
+
+    calendarDialog.value = true
   }
 
   onMounted(() => {
@@ -201,20 +190,16 @@ export default function useTodo() {
   })
 
   return {
-    output,
-    input,
-    sort,
+    inputTodo,
+    descending,
     progress,
     sortedTodos,
+    dialogTodo,
+    calendarDialog,
     addTodo,
     eliminate,
     onMounted,
     update,
-
-    dialog,
-    checkDeleteDialog,
-    calendarDialog,
-    showCheckDeleteDialog,
     showCalendarDialog,
   }
 }
