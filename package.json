@@ -15,9 +15,11 @@
     "@aws-amplify/ui-vue": "^1.0.9",
     "@nuxtjs/axios": "^5.13.1",
     "@nuxtjs/composition-api": "^0.24.0",
+    "@nuxtjs/dotenv": "^1.4.1",
     "@nuxtjs/pwa": "^3.3.5",
     "aws-amplify": "^4.0.2",
     "core-js": "^3.9.1",
+    "dotenv": "^10.0.0",
     "nuxt": "^2.15.3"
   },
   "devDependencies": {
