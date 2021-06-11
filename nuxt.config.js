@@ -1,4 +1,6 @@
 import colors from 'vuetify/es5/util/colors'
+const envPath = 'config/.env'
+require('dotenv').config({ path: envPath })
 
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
@@ -32,6 +34,7 @@ export default {
     // https://go.nuxtjs.dev/vuetify
     '@nuxtjs/vuetify',
     '@nuxtjs/composition-api/module',
+    // '@nuxtjs/dotenv',
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
@@ -40,7 +43,12 @@ export default {
     '@nuxtjs/axios',
     // https://go.nuxtjs.dev/pwa
     '@nuxtjs/pwa',
+    '@nuxtjs/dotenv',
   ],
+
+  dotenv: {
+    filename: envPath,
+  },
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {},
